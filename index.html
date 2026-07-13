@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Geist Pixel font -->
+  <link rel="stylesheet" href="https://vercel.app">
+
+  <style>
+    :root{
+      --bg: #9ED8DB;     /* default: Panama */
+      --text: #E9FFF9;   /* default: Panama */
+      --card: rgba(0, 0, 0, 0.22);
+      --cardLine: rgba(255,255,255,0.18);
+      --border: rgba(255,255,255,0.22);
+      --shadow: rgba(0,0,0,0.18);
+    }
+
+    body{
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: "Geist Pixel", monospace;
+      transition: background-color 250ms ease;
+    }
+
+    body, .clock-container, .title, .date, .digit, .colon, select {
+      font-family: "Geist Pixel", monospace !important;
+      color: var(--text);
+      transition: color 250ms ease, border-color 250ms ease, background-color 250ms ease;
+    }
+
+    .clock-container{
+      text-align: center;
+      letter-spacing: 0.5px;
+      min-width: 320px;
+    }
+
+    .controls{
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    select{
+      background: rgba(0, 0, 0, 0.18);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      outline: none;
+      font-size: 12px;
+    }
+
+    .title{
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .flip-row{
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .flip-group{
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .flip-card{
+      width: 42px;
+      height: 56px;
+      border-radius: 10px;
+      background: var(--card);
+      box-shadow: 0 10px 25px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flip-card::after{
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: var(--cardLine);
+    }
+
+    .digit{
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 1px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .colon{
+      font-size: 30px;
+      font-weight: 700;
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    .date{
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="clock-container">
+    <div class="controls">
+      <select id="city-select" aria-label="Select city"></select>
+    </div>
+
+    <div class="title" id="title">Loading...</div>
+
+    <div class="flip-row" aria-label="Selected time">
+      <div class="flip-group" id="hh"></div>
+      <div class="colon">:</div>
+      <div class="flip-group" id="mm"></div>
+    </div>
+
+    <div class="date" id="clock-date">--------</div>
+  </div>
+
+  <script>
+    // Lista ordenada con tus frases líricas, zonas horarias globales y paletas estéticas
+    const CITIES = [
+      { id: "panama", label: "Panama", timeZone: "America/Panama", bg: "#9ED8DB", text: "#E9FFF9", phrase: "le digo hola, ella me dice goodbye" },
+      { id: "bud", label: "Budapest", timeZone: "Europe/Budapest", bg: "#FBD1A2", text: "#FC9F5B", phrase: "all the partyy in Hungaryyy" },
+      { id: "seoul", label: "Seoul", timeZone: "Asia/Seoul", bg: "#EC4067", text: "#F7C59F", phrase: "saranghae neol i neukkim idaero" },
+      { id: "sv", label: "San Salvador", timeZone: "America/El_Salvador", bg: "#4A5899", text: "#C1DBE3", phrase: "el de ojitos dormilones" },
+      { id: "paris", label: "Paris", timeZone: "Europe/Paris", bg: "#EFA48B", text: "#FCC8B2", phrase: "i wanna brainwash you into loving me forever" },
+      { id: "london", label: "London", timeZone: "Europe/London", bg: "#C6D8AF", text: "#CAD2C5", phrase: "you’re insecure, don’t know what forrr" },
+      { id: "la", label: "Los Angeles", timeZone: "America/Los_Angeles", bg: "#1CFEBA", text: "#95F2D9", phrase: "the lush life’s givin’ me a rushhh" },
+      { id: "nyc", label: "New York", timeZone: "America/New_York", bg: "#B8CDF8", text: "#9D8DF1", phrase: "un verano en Nuevayol, un ratito na’ má’" }
+    ];
+
+    const citySelect = document.getElementById("city-select");
+    const titleEl = document.getElementById("title");
+    const dateEl = document.getElementById("clock-date");
+
+    const hhEl = document.getElementById("hh");
+    const mmEl = document.getElementById("mm");
+
+    let selected = CITIES[0]; // default Panama
+
+    function renderOptions(){
+      citySelect.innerHTML = CITIES.map(c =>
+        `<option value="${c.id}">${c.label}</option>`
+      ).join("");
+      citySelect.value = selected.id;
+    }
+
+    function applyTheme(city){
+      document.documentElement.style.setProperty("--bg", city.bg);
+      document.documentElement.style.setProperty("--text", city.text);
+      titleEl.textContent = city.phrase; 
+    }
+
+    function setTwoDigitCards(el, value2){
+      const [a, b] = String(value2).padStart(2, "0").split("");
+      el.innerHTML = `
+        <div class="flip-card"><div class="digit">${a}</div></div>
+        <div class="flip-card"><div class="digit">${b}</div></div>
+      `;
+    }
+
+    function updateClock(){
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: selected.timeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      }).formatToParts(now);
+
+      const get = (type) => parts.find(p => p.type === type)?.value ?? "00";
+
+      setTwoDigitCards(hhEl, get("hour"));
+      setTwoDigitCards(mmEl, get("minute"));
+
+      dateEl.textContent = new Intl.DateTimeFormat("en-US", {
+        timeZone: selected.timeZone,
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      }).format(now);
+    }
+
+    citySelect.addEventListener("change", () => {
+      selected = CITIES.find(c => c.id === citySelect.value) ?? CITIES[0];
+      applyTheme(selected);
+      updateClock();
+    });
+
+    // init
+    renderOptions();
+    applyTheme(selected);
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
