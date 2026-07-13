@@ -9,16 +9,15 @@
 
   <style>
     :root{
-      --bg: #9ED8DB;     /* default: Panama */
-      --text: #E9FFF9;   /* default: Panama */
-      --card: rgba(0, 0, 0, 0.22);
+      --bg-clock: #9ED8DB;   /* default flip-card background */
+      --text: #E9FFF9;       /* default text color */
       --cardLine: rgba(255,255,255,0.18);
       --border: rgba(255,255,255,0.22);
-      --shadow: rgba(0,0,0,0.18);
+      --shadow: rgba(0,0,0,0.15);
     }
 
     body{
-      background: var(--bg);
+      background: transparent; /* 1. Fondo del widget totalmente transparente */
       color: var(--text);
       margin: 0;
       height: 100vh;
@@ -26,68 +25,76 @@
       justify-content: center;
       align-items: center;
       font-family: "Geist Pixel", monospace;
-      transition: background-color 250ms ease;
     }
 
-    body, .clock-container, .title, .date, .digit, .colon, select {
+    body, .clock-container, .title, .date, .digit, .colon, select, .ampm {
       font-family: "Geist Pixel", monospace !important;
       color: var(--text);
-      transition: color 250ms ease, border-color 250ms ease, background-color 250ms ease;
+      transition: color 250ms ease, border-color 250ms ease;
     }
 
+    /* 3. Estructura compacta ideal para columnas de Notion */
     .clock-container{
       text-align: center;
       letter-spacing: 0.5px;
-      min-width: 320px;
+      width: 100%;
+      max-width: 200px; /* Tamaño máximo cuadrado */
+      padding: 10px;
+      box-sizing: border-box;
     }
 
     .controls{
       display: flex;
       justify-content: center;
-      gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     select{
-      background: rgba(0, 0, 0, 0.18);
+      background: rgba(0, 0, 0, 0.08);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 8px;
+      padding: 4px 6px;
       outline: none;
-      font-size: 12px;
+      font-size: 10px;
+      cursor: pointer;
     }
 
     .title{
-      font-size: 14px;
+      font-size: 10px;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+      line-height: 1.2;
+      word-wrap: break-word;
     }
 
     .flip-row{
       display: flex;
-      gap: 10px;
+      gap: 4px;
       justify-content: center;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
+      position: relative;
     }
 
     .flip-group{
       display: flex;
-      gap: 6px;
+      gap: 3px;
       align-items: center;
     }
 
+    /* 1. El color de fondo (bg) ahora se aplica solo a las tarjetas del reloj */
     .flip-card{
-      width: 42px;
-      height: 56px;
-      border-radius: 10px;
-      background: var(--card);
-      box-shadow: 0 10px 25px var(--shadow);
+      width: 26px; 
+      height: 36px;
+      border-radius: 6px;
+      background: var(--bg-clock);
+      box-shadow: 0 4px 10px var(--shadow);
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
+      transition: background-color 250ms ease;
     }
 
     .flip-card::after{
@@ -101,23 +108,34 @@
     }
 
     .digit{
-      font-size: 32px;
+      font-size: 20px;
       font-weight: 800;
       line-height: 1;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       font-variant-numeric: tabular-nums;
     }
 
     .colon{
-      font-size: 30px;
+      font-size: 18px;
       font-weight: 700;
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    /* 2. Estilo pequeño para el indicador AM/PM */
+    .ampm{
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-left: 2px;
+      align-self: flex-end;
+      padding-bottom: 4px;
       opacity: 0.9;
-      transform: translateY(-2px);
     }
 
     .date{
-      font-size: 14px;
-      opacity: 0.9;
+      font-size: 10px;
+      opacity: 0.8;
     }
   </style>
 </head>
@@ -134,13 +152,14 @@
       <div class="flip-group" id="hh"></div>
       <div class="colon">:</div>
       <div class="flip-group" id="mm"></div>
+      <!-- 2. Contenedor para AM/PM -->
+      <div class="ampm" id="ampm">--</div>
     </div>
 
     <div class="date" id="clock-date">--------</div>
   </div>
 
   <script>
-    // Lista ordenada con tus frases líricas, zonas horarias globales y paletas estéticas
     const CITIES = [
       { id: "panama", label: "Panama", timeZone: "America/Panama", bg: "#9ED8DB", text: "#E9FFF9", phrase: "le digo hola, ella me dice goodbye" },
       { id: "bud", label: "Budapest", timeZone: "Europe/Budapest", bg: "#FBD1A2", text: "#FC9F5B", phrase: "all the partyy in Hungaryyy" },
@@ -155,11 +174,12 @@
     const citySelect = document.getElementById("city-select");
     const titleEl = document.getElementById("title");
     const dateEl = document.getElementById("clock-date");
+    const ampmEl = document.getElementById("ampm");
 
     const hhEl = document.getElementById("hh");
     const mmEl = document.getElementById("mm");
 
-    let selected = CITIES[0]; // default Panama
+    let selected = CITIES[0];
 
     function renderOptions(){
       citySelect.innerHTML = CITIES.map(c =>
@@ -169,7 +189,8 @@
     }
 
     function applyTheme(city){
-      document.documentElement.style.setProperty("--bg", city.bg);
+      // 1. Ahora modifica --bg-clock en lugar del fondo de la página
+      document.documentElement.style.setProperty("--bg-clock", city.bg);
       document.documentElement.style.setProperty("--text", city.text);
       titleEl.textContent = city.phrase; 
     }
@@ -193,14 +214,20 @@
 
       const get = (type) => parts.find(p => p.type === type)?.value ?? "00";
 
-      setTwoDigitCards(hhEl, get("hour"));
+      // Limpieza de formato de hora para evitar bugs visuales
+      let hourVal = get("hour");
+      if(hourVal.length > 2) hourVal = hourVal.slice(-2);
+
+      setTwoDigitCards(hhEl, hourVal);
       setTwoDigitCards(mmEl, get("minute"));
+      
+      // 2. Renderizado dinámico de AM o PM
+      ampmEl.textContent = get("dayPeriod").toLowerCase();
 
       dateEl.textContent = new Intl.DateTimeFormat("en-US", {
         timeZone: selected.timeZone,
-        weekday: "long",
-        year: "numeric",
-        month: "long",
+        weekday: "short", /* Formato más corto para que quepa en el cuadro */
+        month: "short",
         day: "numeric"
       }).format(now);
     }
@@ -211,7 +238,6 @@
       updateClock();
     });
 
-    // init
     renderOptions();
     applyTheme(selected);
     updateClock();
