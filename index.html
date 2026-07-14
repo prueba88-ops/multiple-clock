@@ -31,31 +31,24 @@
       user-select: none;
     }
 
-    /* Ancho ultra reducido ideal para columnas de Notion */
+    /* Caja horizontal súper estrecha perfecta para Notion */
     .clock-container{
       text-align: center;
       letter-spacing: 0.5px;
       width: 100%;
-      max-width: 110px; 
+      max-width: 200px; 
       padding: 4px;
       box-sizing: border-box;
       cursor: pointer;
     }
 
-    /* Contenedor vertical para apilar elementos */
-    .vertical-clock {
+    /* Fila horizontal ultra compacta */
+    .flip-row{
       display: flex;
-      flex-direction: column;
+      gap: 3px;
+      justify-content: center;
       align-items: center;
       margin-bottom: 6px;
-    }
-
-    /* Fila de minutos con espacio para el AM/PM al lado */
-    .row-with-ampm {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
     }
 
     .flip-group{
@@ -64,6 +57,7 @@
       align-items: center;
     }
 
+    /* Tarjetas del reloj grandes e imponentes */
     .flip-card{
       width: 35px; 
       height: 48px;
@@ -96,16 +90,17 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Dos puntos centrados entre bloques */
+    /* Dos puntos estéticos horizontales */
     .colon{
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
       opacity: 0.8;
       line-height: 1;
-      margin: 2px 0;
+      transform: translateY(-2px);
+      margin: 0 1px;
     }
 
-    /* Ubicado al lado de los minutos */
+    /* AM/PM ubicado justo al final de los minutos */
     .ampm{
       font-size: 11px;
       font-weight: 700;
@@ -127,19 +122,19 @@
 
 <body>
   <div class="clock-container" id="clock-trigger" aria-label="Click to switch city">
-    <!-- Estructura vertical con dos puntos divisorios -->
-    <div class="vertical-clock">
-      <!-- Arriba: Horas -->
+    <!-- Estructura horizontal limpia con dos puntos -->
+    <div class="flip-row">
+      <!-- Horas -->
       <div class="flip-group" id="hh"></div>
       
-      <!-- Centro: Dos puntos -->
+      <!-- Dos puntos divisorios -->
       <div class="colon" id="colon">:</div>
       
-      <!-- Abajo: Minutos + AM/PM -->
-      <div class="row-with-ampm">
-        <div class="flip-group" id="mm"></div>
-        <div class="ampm" id="ampm">--</div>
-      </div>
+      <!-- Minutos -->
+      <div class="flip-group" id="mm"></div>
+      
+      <!-- AM/PM al final -->
+      <div class="ampm" id="ampm">--</div>
     </div>
 
     <div class="date" id="clock-date">--------</div>
@@ -166,7 +161,7 @@
       document.documentElement.style.setProperty("--text", city.text);
       dateEl.style.color = city.text;
       ampmEl.style.color = city.text;
-      colonEl.style.color = city.text; // Aplica el color del texto dinámico a los dos puntos
+      colonEl.style.color = city.text;
     }
 
     function setTwoDigitCards(el, value2){
