@@ -25,13 +25,13 @@
       font-family: "Geist Pixel", monospace;
     }
 
-    body, .clock-container, .date, .digit, .ampm {
+    body, .clock-container, .date, .digit, .ampm, .colon {
       font-family: "Geist Pixel", monospace !important;
       transition: color 250ms ease;
       user-select: none;
     }
 
-    /* Ancho ultra reducido gracias a la orientación vertical */
+    /* Ancho ultra reducido ideal para columnas de Notion */
     .clock-container{
       text-align: center;
       letter-spacing: 0.5px;
@@ -42,12 +42,11 @@
       cursor: pointer;
     }
 
-    /* Contenedor vertical para apilar hora y minutos */
+    /* Contenedor vertical para apilar elementos */
     .vertical-clock {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
       margin-bottom: 6px;
     }
 
@@ -97,7 +96,16 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Ubicado estéticamente al lado de los minutos */
+    /* Dos puntos centrados entre bloques */
+    .colon{
+      font-size: 22px;
+      font-weight: 700;
+      opacity: 0.8;
+      line-height: 1;
+      margin: 2px 0;
+    }
+
+    /* Ubicado al lado de los minutos */
     .ampm{
       font-size: 11px;
       font-weight: 700;
@@ -119,10 +127,13 @@
 
 <body>
   <div class="clock-container" id="clock-trigger" aria-label="Click to switch city">
-    <!-- Estructura vertical: Hora arriba, Minutos abajo -->
+    <!-- Estructura vertical con dos puntos divisorios -->
     <div class="vertical-clock">
       <!-- Arriba: Horas -->
       <div class="flip-group" id="hh"></div>
+      
+      <!-- Centro: Dos puntos -->
+      <div class="colon" id="colon">:</div>
       
       <!-- Abajo: Minutos + AM/PM -->
       <div class="row-with-ampm">
@@ -143,6 +154,7 @@
     const containerEl = document.getElementById("clock-trigger");
     const dateEl = document.getElementById("clock-date");
     const ampmEl = document.getElementById("ampm");
+    const colonEl = document.getElementById("colon");
     const hhEl = document.getElementById("hh");
     const mmEl = document.getElementById("mm");
 
@@ -154,6 +166,7 @@
       document.documentElement.style.setProperty("--text", city.text);
       dateEl.style.color = city.text;
       ampmEl.style.color = city.text;
+      colonEl.style.color = city.text; // Aplica el color del texto dinámico a los dos puntos
     }
 
     function setTwoDigitCards(el, value2){
