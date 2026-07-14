@@ -31,24 +31,32 @@
       user-select: none;
     }
 
-    /* Caja optimizada al mínimo para la columna de Notion */
+    /* Ancho ultra reducido gracias a la orientación vertical */
     .clock-container{
       text-align: center;
       letter-spacing: 0.5px;
       width: 100%;
-      max-width: 170px; 
-      padding: 2px;
+      max-width: 110px; 
+      padding: 4px;
       box-sizing: border-box;
-      cursor: pointer; /* Indica que se puede hacer clic */
+      cursor: pointer;
     }
 
-    /* Ultra estrecho: espacio de 1px entre bloques */
-    .flip-row{
+    /* Contenedor vertical para apilar hora y minutos */
+    .vertical-clock {
       display: flex;
-      gap: 1px;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      gap: 4px;
       margin-bottom: 6px;
+    }
+
+    /* Fila de minutos con espacio para el AM/PM al lado */
+    .row-with-ampm {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
 
     .flip-group{
@@ -57,7 +65,6 @@
       align-items: center;
     }
 
-    /* Mantiene el tamaño grande pero optimiza el ancho */
     .flip-card{
       width: 35px; 
       height: 48px;
@@ -90,11 +97,12 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* Ubicado estéticamente al lado de los minutos */
     .ampm{
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      margin-left: 3px;
+      margin-left: 4px;
       align-self: flex-end;
       padding-bottom: 4px;
       opacity: 0.9;
@@ -110,19 +118,23 @@
 </head>
 
 <body>
-  <!-- Todo el contenedor cambia de ciudad al hacerle clic -->
   <div class="clock-container" id="clock-trigger" aria-label="Click to switch city">
-    <div class="flip-row">
+    <!-- Estructura vertical: Hora arriba, Minutos abajo -->
+    <div class="vertical-clock">
+      <!-- Arriba: Horas -->
       <div class="flip-group" id="hh"></div>
-      <div class="flip-group" id="mm"></div>
-      <div class="ampm" id="ampm">--</div>
+      
+      <!-- Abajo: Minutos + AM/PM -->
+      <div class="row-with-ampm">
+        <div class="flip-group" id="mm"></div>
+        <div class="ampm" id="ampm">--</div>
+      </div>
     </div>
 
     <div class="date" id="clock-date">--------</div>
   </div>
 
   <script>
-    // Solo Panamá y Budapest con el orden de colores que me diste
     const CITIES = [
       { id: "panama", label: "Panama", timeZone: "America/Panama", bg: "#E9FFF9", text: "#9ED8DB" },
       { id: "bud", label: "Budapest", timeZone: "Europe/Budapest", bg: "#FBD1A2", text: "#FC9F5B" }
@@ -179,7 +191,6 @@
       }).format(now);
     }
 
-    // Alternar entre las dos ciudades al hacer clic en el widget
     containerEl.addEventListener("click", () => {
       currentIndex = currentIndex === 0 ? 1 : 0;
       selected = CITIES[currentIndex];
